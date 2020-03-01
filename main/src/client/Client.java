@@ -11,7 +11,7 @@ public class Client {
 
         System.out.println("JAVA TCP CLIENT");
         String hostName = "localhost";
-        int portNumber = 12345;
+        int portNumber = 12346;
         Socket socket = null;
 
         try {

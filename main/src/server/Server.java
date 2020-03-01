@@ -11,7 +11,7 @@ public class Server {
     public static void main(String[] args) throws IOException {
 
         System.out.println("JAVA TCP SERVER");
-        int portNumber = 12345;
+        int portNumber = 12346;
         ServerSocket serverSocket = null;
 
         try {
