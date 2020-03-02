@@ -1,46 +1,57 @@
 package server;
 
-import java.io.BufferedReader;
+import server.data.ClientData;
+import server.thread.receive.EstablishTcpThread;
+import server.thread.receive.ReceiveTcpThread;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetAddress;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class Server {
-    public static void main(String[] args) throws IOException {
 
-        System.out.println("JAVA TCP SERVER");
-        int portNumber = 12346;
-        ServerSocket serverSocket = null;
+    private final int portNumber = 12346;
+    private final InetAddress tcpAddr;
+    private final int backlog = 50;
+    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+    private int clientIdCounter = 0;
+    private List<ClientData> clientDataList = Collections.synchronizedList(new LinkedList<>());
 
-        try {
-            // create socket
-            serverSocket = new ServerSocket(portNumber);
 
-            while(true){
+    public Server() throws IOException {
+        this.tcpAddr = InetAddress.getByName("127.0.0.1");
+    }
 
-                // accept client
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("client connected");
+    public void start() {
+        this.print("Server is starting...");
+        EstablishTcpThread establishTcpThread = new EstablishTcpThread(
+                this, this.portNumber, this.backlog, this.tcpAddr);
+        executor.execute(establishTcpThread);
+    }
 
-                // in & out streams
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    public void addClient(ClientData clientData){
+        this.clientDataList.add(clientData);
+        this.incClientIdCounter();
+        this.executor.execute(new ReceiveTcpThread(clientData));
+    }
 
-                // read msg, send response
-                String msg = in.readLine();
-                System.out.println("received msg: " + msg);
-                out.println("Pong Java Tcp");
+    public void removeClient(ClientData clientData){
+        this.clientDataList.remove(clientData);
+    }
 
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally{
-            if (serverSocket != null){
-                serverSocket.close();
-            }
-        }
+    public int getClientIdCounter() {
+        return this.clientIdCounter;
+    }
+
+    private void incClientIdCounter() {
+        this.clientIdCounter += 1;
+    }
+
+    public synchronized void print(String s) {
+        System.out.println(s);
     }
 }
