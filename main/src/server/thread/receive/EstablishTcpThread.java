@@ -33,7 +33,7 @@ public class EstablishTcpThread implements Runnable{
 
                 // accept client
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("New client connected: id: " + server.getClientIdCounter());
+                System.out.println("New client accepted: id: " + server.getClientIdCounter());
 
                 ClientData clientData = new ClientData(server.getClientIdCounter(), clientSocket);
                 server.addClient(clientData);

@@ -14,6 +14,7 @@ public class ClientData {
     private final int id;
     private final Socket tcpSocket;
     private DatagramSocket udpSocket;
+    private String nick;
 
     private PrintWriter tcpOut;
     private BufferedReader tcpIn;
@@ -39,6 +40,14 @@ public class ClientData {
 
     public BufferedReader getTcpIn() {
         return tcpIn;
+    }
+
+    public String getNick() {
+        return nick;
+    }
+
+    public void setNick(String nick) {
+        this.nick = nick;
     }
 
     public Socket getTcpSocket() {
