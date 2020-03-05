@@ -25,6 +25,7 @@ public class Client {
     private PrintWriter out;
     private BufferedReader in;
     private DatagramSocket udpSocket;
+    private MulticastSocket multicastSocket;
     private boolean isRunning = true;
 
 
@@ -42,24 +43,13 @@ public class Client {
         return in;
     }
 
-    public void setUdpSocket(DatagramSocket udpSocket) {
-        this.udpSocket = udpSocket;
-    }
 
     public DatagramSocket getUdpSocket() {
         return udpSocket;
     }
 
-    public int getPortNumber() {
-        return portNumber;
-    }
-
-    public InetAddress getAddress() {
-        return address;
-    }
-
-    public InetAddress getGroupAddress() {
-        return groupAddress;
+    public MulticastSocket getMulticastSocket() {
+        return multicastSocket;
     }
 
     public void run() throws IOException {
@@ -74,7 +64,9 @@ public class Client {
             this.setupUdp();
             this.executor.execute(new ReceiveUdpClientThread(this));
         }
-//        this.executor.execute(new ReceiveMulticastClientThread(this));
+        this.setupMulticast();
+        this.executor.execute(new ReceiveMulticastClientThread(this));
+
         this.handleInput();
     }
 
@@ -119,6 +111,11 @@ public class Client {
         udpSocket.send(sendPacket);
     }
 
+    private void setupMulticast() throws IOException {
+        this.multicastSocket = new MulticastSocket(portNumber);
+        this.multicastSocket.joinGroup(groupAddress);
+    }
+
     public String getClientPrefix() {
         return this.id + "#";
     }
@@ -131,14 +128,9 @@ public class Client {
                 this.sendTcp(msg.substring(1).strip());
             } else if (msg.startsWith("U")) {
                 this.sendUdp();
-            }
-//            else if(msg.startsWith("M")){
-//                //TODO Implement Multicast
-//                this.sendMulticast(msg.substring(1).strip());
-//            } else if(msg.startsWith("exit")){
-//                this.handleExit();
-//            }
-            else if (msg.startsWith("exit")) {
+            } else if (msg.startsWith("M")) {
+                this.sendMulticast();
+            } else if (msg.startsWith("exit")) {
                 this.handleExit();
             }
         }
@@ -152,6 +144,7 @@ public class Client {
             e.printStackTrace();
         }
         udpSocket.close();
+        multicastSocket.close();
         executor.shutdownNow();
     }
 
@@ -186,6 +179,47 @@ public class Client {
         DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, address, portNumber);
         try {
             udpSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMulticast() {
+        byte[] sendBuffer = (getClientPrefix() +
+                ".                __..-----')\n" +
+                "       ,.--._ .-'_..--...-'\n" +
+                "      '-\"'. _/_ /  ..--''\"\"'-.\n" +
+                "      _.--\"\"...:._:(_ ..:\"::. \\\n" +
+                "   .-' ..::--\"\"_(##)#)\"':. \\ \\)    \\ _|_ /\n" +
+                "  /_:-:'/  :__(##)##)    ): )   '-./'   '\\.-'\n" +
+                "  \"  / |  :' :/\"\"\\///)  /:.'    --(       )--\n" +
+                "    / :( :( :(   (#//)  \"       .-'\\.___./'-.\n" +
+                "   / :/|\\ :\\_:\\   \\#//\\            /  |  \\\n" +
+                "   |:/ | \"\"--':\\   (#//)              '\n" +
+                "   \\/  \\ :|  \\ :\\  (#//)\n" +
+                "        \\:\\   '.':. \\#//\\\n" +
+                "         ':|    \"--'(#///)\n" +
+                "                    (#///)\n" +
+                "                    (#///)\n" +
+                "                     \\#///\\\n" +
+                "                     (##///)\n" +
+                "                     (##///)\n" +
+                "                     (##///)\n" +
+                "                     (##///)\n" +
+                "                      \\##///\\\n" +
+                "                      (###///)\n" +
+                "                      (sjw////)__...-----....__\n" +
+                "                      (#/::'''                 \"\"--.._\n" +
+                "                 __..-'''                             \"-._\n" +
+                "         __..--\"\"                                         '._\n" +
+                "___..--\"\"                                                    \"-..____\n" +
+                "  (_ \"\"---....___                                     __...--\"\" _)\n" +
+                "    \"\"\"--...  ___\"\"\"\"\"-----......._______......----\"\"\"     --\"\"\"\n" +
+                "                  \"\"\"\"       ---.....   ___....----").getBytes();
+
+        DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, groupAddress, portNumber);
+        try {
+            multicastSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
         }

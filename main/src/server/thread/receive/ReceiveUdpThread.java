@@ -32,7 +32,7 @@ public class ReceiveUdpThread implements Runnable {
 
                     if (server.isClientUdpSet(clientId)) {
                         msg = msg.substring(hashIndex + 1);
-                        server.printSynchronized("received msg UDP" + clientIdString + ":\n" + msg);
+                        server.printSynchronized("received msg UDP " + clientIdString + ":\n" + msg);
                         server.sendToOthersUdp(clientId, msg);
                     } else {
                         for (ClientData clientData : server.getClientDataList()) {

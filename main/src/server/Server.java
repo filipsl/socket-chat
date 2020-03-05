@@ -3,6 +3,7 @@ package server;
 
 import server.data.ClientData;
 import server.thread.receive.EstablishTcpThread;
+import server.thread.receive.ReceiveMulticastThread;
 import server.thread.receive.ReceiveTcpThread;
 import server.thread.receive.ReceiveUdpThread;
 
@@ -26,30 +27,36 @@ public class Server {
     private Set<Integer> idSetUdp = Collections.synchronizedSet(new HashSet<>());
     private DatagramSocket datagramSocket;
     private ServerSocket serverSocket;
+    private MulticastSocket multicastSocket;
     private boolean isRunning = true;
 
 
     public Server(InetAddress tcpAddr, int portNumber) throws SocketException {
         this.tcpAddr = tcpAddr;
         this.portNumber = portNumber;
-        this.datagramSocket = new DatagramSocket(portNumber);
+        this.datagramSocket = new DatagramSocket(portNumber, tcpAddr);
     }
 
-    public Server(InetAddress tcpAddr, int portNumber, InetAddress multicastAddress) throws SocketException {
+    public Server(InetAddress tcpAddr, int portNumber, InetAddress multicastAddress) throws IOException {
         this.tcpAddr = tcpAddr;
         this.portNumber = portNumber;
-        this.datagramSocket = new DatagramSocket(portNumber);
+        this.datagramSocket = new DatagramSocket(portNumber, tcpAddr);
         this.multicastAddr = multicastAddress;
+        this.multicastSocket = new MulticastSocket(portNumber);
     }
 
     public void run() {
         System.out.println("CHAT SERVER\n**************");
-        System.out.println("Do you want to receive multicast");
-        System.out.println(getHelp()+"\n");
+        System.out.println(getHelp() + "\n");
         EstablishTcpThread establishTcpThread = new EstablishTcpThread(
                 this, this.portNumber, this.backlog, this.tcpAddr);
         executor.execute(establishTcpThread);
         executor.execute(new ReceiveUdpThread(this));
+
+        if (this.multicastAddr != null) {
+            executor.execute(new ReceiveMulticastThread(this));
+        }
+
         this.handleInput();
     }
 
@@ -78,6 +85,14 @@ public class Server {
             serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if (multicastSocket != null) {
+            try {
+                multicastSocket.leaveGroup(multicastAddr);
+                multicastSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         this.executor.shutdownNow();
     }
@@ -154,6 +169,10 @@ public class Server {
 
     public DatagramSocket getDatagramSocket() {
         return datagramSocket;
+    }
+
+    public MulticastSocket getMulticastSocket() {
+        return multicastSocket;
     }
 
     public boolean isRunning() {
