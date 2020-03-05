@@ -143,8 +143,11 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        udpSocket.close();
-        multicastSocket.close();
+
+        if(udpSocket != null)
+            udpSocket.close();
+        if(multicastSocket != null)
+            multicastSocket.close();
         executor.shutdownNow();
     }
 

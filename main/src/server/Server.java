@@ -20,7 +20,7 @@ public class Server {
     private final InetAddress tcpAddr;
     private InetAddress multicastAddr;
     private final int backlog = 50;
-    private final int clientLimit = 30;
+    private final int clientLimit = 10;
     private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(clientLimit + 3);
     private int clientIdCounter = 0;
     private List<ClientData> clientDataList = new CopyOnWriteArrayList<>();
