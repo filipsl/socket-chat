@@ -43,6 +43,7 @@ public class Server {
         this.datagramSocket = new DatagramSocket(portNumber, tcpAddr);
         this.multicastAddr = multicastAddress;
         this.multicastSocket = new MulticastSocket(portNumber);
+        this.multicastSocket.joinGroup(multicastAddr);
     }
 
     public void run() {
