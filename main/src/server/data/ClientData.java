@@ -1,11 +1,10 @@
 package server.data;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Objects;
 
@@ -13,7 +12,8 @@ public class ClientData {
 
     private final int id;
     private final Socket tcpSocket;
-    private DatagramSocket udpSocket;
+    private int udpPort;
+    private InetAddress inetAddress;
     private String nick;
 
     private PrintWriter tcpOut;
@@ -26,8 +26,21 @@ public class ClientData {
         this.tcpIn = new BufferedReader(new InputStreamReader(this.tcpSocket.getInputStream()));
     }
 
-    public void setUdpSocket(DatagramSocket udpSocket) {
-        this.udpSocket = udpSocket;
+
+    public void setUdpPort(int udpPort) {
+        this.udpPort = udpPort;
+    }
+
+    public int getUdpPort() {
+        return udpPort;
+    }
+
+    public void setInetAddress(InetAddress inetAddress) {
+        this.inetAddress = inetAddress;
+    }
+
+    public InetAddress getInetAddress() {
+        return inetAddress;
     }
 
     public int getId() {
@@ -54,10 +67,6 @@ public class ClientData {
         return tcpSocket;
     }
 
-    public DatagramSocket getUdpSocket() {
-        return udpSocket;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -69,5 +78,10 @@ public class ClientData {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return this.getId() + "#" + this.getNick();
     }
 }

@@ -2,32 +2,40 @@ package client.thread.receive;
 
 import client.Client;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.SocketException;
 
 public class ReceiveTcpClientThread implements Runnable {
     private final Client client;
-    private final BufferedReader in;
 
-    public ReceiveTcpClientThread(Client client, BufferedReader in) {
+    public ReceiveTcpClientThread(Client client) {
         this.client = client;
-        this.in = in;
     }
 
     @Override
     public void run() {
-        while (true) {
-            String msg = null;
+        boolean serverActive = true;
+        while (serverActive && client.isRunning()) {
+            String msg;
             try {
-                msg = this.in.readLine();
+                msg = client.getIn().readLine();
+                if (msg == null) {
+                    client.printSynchronized("TCP connection closed");
+                    try {
+                        client.getTcpSocket().close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    serverActive = false;
+                } else {
+                    client.printSynchronized(msg);
+                }
+            } catch (SocketException e) {
+                client.printSynchronized("TCP socket closed.");
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (msg == null) {
-                client.printSynchronized("TCP Connection closed");
-            } else {
-                client.printSynchronized(msg);
-            }
+
         }
     }
 }

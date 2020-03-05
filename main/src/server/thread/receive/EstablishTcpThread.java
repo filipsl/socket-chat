@@ -7,15 +7,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
-public class EstablishTcpThread implements Runnable{
+public class EstablishTcpThread implements Runnable {
 
     private final Server server;
     private final int portNumber;
     private final int backlog;
     private final InetAddress inetAddress;
 
-    public EstablishTcpThread(Server server, int portNumber, int backlog, InetAddress inetAddress){
+    public EstablishTcpThread(Server server, int portNumber, int backlog, InetAddress inetAddress) {
         this.server = server;
         this.portNumber = portNumber;
         this.backlog = backlog;
@@ -24,32 +25,23 @@ public class EstablishTcpThread implements Runnable{
 
     @Override
     public void run() {
-        ServerSocket serverSocket = null;
         try {
-            // create socket
-            serverSocket = new ServerSocket(this.portNumber, this.backlog, this.inetAddress);
+            server.setServerSocket(new ServerSocket(this.portNumber, this.backlog, this.inetAddress));
 
-            while(true){
-
-                // accept client
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("New client accepted: id: " + server.getClientIdCounter());
-
+            while (server.isRunning()) {
+                Socket clientSocket = server.getServerSocket().accept();
+                server.printSynchronized("New client accepted: id: " + server.getClientIdCounter());
                 ClientData clientData = new ClientData(server.getClientIdCounter(), clientSocket);
                 server.addClient(clientData);
-
             }
+
+        } catch (SocketException e) {
+            if(server.getServerSocket().isClosed())
+                server.printSynchronized("Socket establishing TCP connections closed.");
+            else
+                server.printSynchronized("Some error with socket establishing connections occurred.");
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        finally{
-            if (serverSocket != null){
-                try {
-                    serverSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 }
